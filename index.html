@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleek Word Counter</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind for 'Inter' font and sleek dark colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary-black': '#000000',
+                        'secondary-panel': '#0a0a0a', // Almost black, for subtle depth
+                        'highlight-glow': '#22d3ee', // Cyan 400 - Electric, sleek color
+                        'text-faint': '#a1a1aa', // Zinc 400
+                        'text-light': '#fafafa', // White
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Apply smooth transition to element hover effects */
+        .transition-all {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+
+        /* Custom glow effect for the sleek, mesmerizing look */
+        .glow-shadow {
+            /* Subtle outer glow using the highlight color */
+            box-shadow: 0 0 40px rgba(34, 211, 238, 0.3), 0 0 10px rgba(34, 211, 238, 0.1);
+            transition: box-shadow 0.3s ease-in-out, transform 0.1s;
+        }
+
+        /* Style for the metrics panel entries */
+        .metric-row {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(34, 211, 238, 0.1); /* Subtle cyan divider */
+        }
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        /* --- Typewriter Effect Styles --- */
+
+        .typewriter-container {
+            /* Use flex to center the inline-block span within the paragraph */
+            display: flex;
+            justify-content: center;
+            /* Reserve height to prevent layout shift */
+            height: 1.5rem;
+        }
+
+        #typewriter-text {
+            /* FIX 1: Use inline-block so max-content is respected */
+            display: inline-block; 
+            /* Clip the overflowed text horizontally */
+            overflow: hidden;
+            /* Keep text on a single line */
+            white-space: nowrap;
+            /* Set initial width to 0 for the animation start */
+            width: 0;
+            /* Blinking cursor style (border) - CHANGED TO SLIM WHITE */
+            border-right: 1px solid #fafafa;
+            
+            /* Apply animations. Typing takes 3s. Blink should start after 3s. */
+            animation: typing 3s steps(55, end) forwards,
+                       blink 0.75s step-end infinite 3s;
+        }
+
+        /* Typing animation: gradually increase the width of the container */
+        @keyframes typing {
+            from { width: 0 }
+            /* FIX 2: Animate to max-content (intrinsic width of the text) to stop the cursor correctly */
+            to { width: max-content }
+        }
+
+        /* Blinking cursor animation: toggle border visibility - CHANGED TO WHITE */
+        @keyframes blink {
+            from, to { border-color: transparent }
+            50% { border-color: #fafafa }
+        }
+    </style>
+</head>
+<body class="bg-black font-sans flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-6xl">
+
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <!-- Updated Heading -->
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-text-light mb-2 tracking-tighter">Sleek Word Counter</h1>
+            
+            <!-- Typewriter Subheading -->
+            <p class="text-base text-text-faint typewriter-container">
+                <span id="typewriter-text"></span>
+            </p>
+        </header>
+
+        <!-- Main Layout: Text Area (Left) and Metrics Panel (Right) -->
+        <div class="flex flex-col lg:flex-row gap-8">
+
+            <!-- 1. Text Input Area (Expanded and Primary Focus) -->
+            <div class="relative flex-grow lg:w-3/4">
+                <textarea
+                    id="text-input"
+                    class="w-full h-[28rem] sm:h-[32rem] p-6 text-xl bg-secondary-panel text-text-light rounded-2xl shadow-inner resize-none focus:ring-4 focus:ring-highlight-glow/50 border border-highlight-glow/20 transition-all placeholder-text-faint/50 glow-shadow"
+                    placeholder="Start typing or paste your document here to get detailed metrics..."
+                    autofocus
+                ></textarea>
+            </div>
+
+            <!-- 2. Metrics Panel (Right Side) -->
+            <div id="metrics-panel" class="lg:w-1/4 bg-secondary-panel rounded-2xl glow-shadow p-6 h-fit border border-highlight-glow/20">
+                <h2 class="text-xl font-bold text-highlight-glow mb-4 uppercase tracking-wider">Document Details</h2>
+
+                <!-- Metrics List -->
+                <div class="text-text-faint text-lg">
+
+                    <div class="metric-row flex justify-between">
+                        <span>Words</span>
+                        <span id="metric-words" class="text-text-light font-semibold">0</span>
+                    </div>
+
+                    <div class="metric-row flex justify-between">
+                        <span>Characters</span>
+                        <span id="metric-chars" class="text-text-light font-semibold">0</span>
+                    </div>
+
+                    <div class="metric-row flex justify-between">
+                        <span>Sentences</span>
+                        <span id="metric-sentences" class="text-text-light font-semibold">0</span>
+                    </div>
+
+                    <div class="metric-row flex justify-between">
+                        <span>Paragraphs</span>
+                        <span id="metric-paragraphs" class="text-text-light font-semibold">0</span>
+                    </div>
+                </div>
+
+                <!-- Reading Time Section -->
+                <div class="mt-6 pt-4 border-t border-highlight-glow/20">
+                    <h3 class="text-lg font-medium text-text-faint mb-2">Estimated Time</h3>
+                    <div class="text-text-faint text-base">
+                        <div class="metric-row flex justify-between">
+                            <span>Reading Time</span>
+                            <span id="metric-read-time" class="text-highlight-glow font-bold">0 sec</span>
+                        </div>
+                        <div class="metric-row flex justify-between">
+                            <span>Speaking Time</span>
+                            <span id="metric-speak-time" class="text-highlight-glow font-bold">0 sec</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const READING_WPM = 200; // Average words per minute for reading
+        const SPEAKING_WPM = 125; // Average words per minute for speaking
+
+        // --- DOM Elements ---
+        const textInput = document.getElementById('text-input');
+        const metrics = {
+            words: document.getElementById('metric-words'),
+            chars: document.getElementById('metric-chars'),
+            sentences: document.getElementById('metric-sentences'),
+            paragraphs: document.getElementById('metric-paragraphs'),
+            readTime: document.getElementById('metric-read-time'),
+            speakTime: document.getElementById('metric-speak-time'),
+        };
+
+        /**
+         * Converts total minutes into a formatted H hr M min S sec string,
+         * only including units that are non-zero.
+         * * @param {number} totalMinutes - The total duration in minutes.
+         * @returns {string} - Formatted time string (e.g., "1 hr 15 min 27 sec" or "30 sec").
+         */
+        function formatTime(totalMinutes) {
+            // If total time is 0 or less, return "0 sec"
+            if (totalMinutes <= 0) return "0 sec";
+
+            // Convert total minutes to total seconds and round
+            const totalSeconds = Math.round(totalMinutes * 60);
+
+            // Calculate H, M, S components
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            let parts = [];
+
+            // 1. Add Hours if > 0
+            if (hours > 0) {
+                parts.push(`${hours} hr`);
+            }
+
+            // 2. Add Minutes if > 0
+            if (minutes > 0) {
+                parts.push(`${minutes} min`);
+            }
+
+            // 3. Add Seconds:
+            // - Always include seconds if H/M are present and seconds > 0.
+            // - If H/M are 0, the time is less than 1 minute, so we display the total seconds.
+            if (parts.length === 0) {
+                return `${totalSeconds} sec`;
+            } else if (seconds > 0) {
+                parts.push(`${seconds} sec`);
+            }
+            
+            // Join the non-zero parts
+            return parts.join(' ');
+        }
+
+        /**
+         * Performs a comprehensive analysis of the input text.
+         */
+        function analyzeText() {
+            const text = textInput.value;
+            const trimmedText = text.trim();
+
+            let wordCount = 0;
+            if (trimmedText !== '') {
+                // Count words: split by one or more whitespace
+                wordCount = trimmedText.split(/\s+/).length;
+            }
+
+            // Count characters: including spaces and punctuation
+            const charCount = text.length;
+
+            // Count sentences: simple heuristic (look for terminal punctuation followed by space or end of string)
+            // Note: This is an approximation and won't handle abbreviations/etc.
+            const sentenceMatch = text.match(/[.!?](\s|$)/g);
+            const sentenceCount = sentenceMatch ? sentenceMatch.length : 0;
+
+            // Count paragraphs: count double newlines, adding 1 for the content if not empty
+            let paragraphCount = 0;
+            if (trimmedText !== '') {
+                // Count double newlines (standard paragraph separator)
+                const paragraphMatch = trimmedText.match(/\n\s*\n/g);
+                // Add 1 for the initial paragraph (if the text isn't empty)
+                paragraphCount = (paragraphMatch ? paragraphMatch.length : 0) + 1;
+            }
+
+            // Calculate estimated times
+            const readMinutes = wordCount / READING_WPM;
+            const speakMinutes = wordCount / SPEAKING_WPM;
+
+            // Update the UI
+            metrics.words.textContent = wordCount.toLocaleString();
+            metrics.chars.textContent = charCount.toLocaleString();
+            metrics.sentences.textContent = sentenceCount.toLocaleString();
+            metrics.paragraphs.textContent = paragraphCount.toLocaleString();
+            
+            // Update time metrics using the enhanced formatTime function
+            metrics.readTime.textContent = formatTime(readMinutes);
+            metrics.speakTime.textContent = formatTime(speakMinutes);
+        }
+
+        /**
+         * Sets the text for the typewriter effect.
+         */
+        function initializeTypewriter() {
+            const typewriterTextElement = document.getElementById('typewriter-text');
+            const staticText = "Real-time analysis for your document structure and readability.";
+
+            // Set the full text content. CSS animation handles the gradual display.
+            if (typewriterTextElement) {
+                typewriterTextElement.textContent = staticText;
+            }
+        }
+
+
+        // Attach the analysis function to the input event
+        textInput.addEventListener('input', analyzeText);
+
+        // Initial analysis and typewriter setup on load
+        window.addEventListener('load', () => {
+            analyzeText();
+            initializeTypewriter();
+        });
+
+    </script>
+</body>
+</html>
