@@ -49,41 +49,22 @@
             border-bottom: none;
         }
 
-        /* --- Typewriter Effect Styles --- */
+        /* --- Typewriter Effect Styles (Purely for cursor blinking) --- */
 
         .typewriter-container {
-            /* Use flex to center the inline-block span within the paragraph */
             display: flex;
             justify-content: center;
-            /* Reserve height to prevent layout shift */
-            height: 1.5rem;
+            height: 1.5rem; /* Reserve height */
         }
 
         #typewriter-text {
-            /* FIX 1: Use inline-block so max-content is respected */
             display: inline-block; 
-            /* Clip the overflowed text horizontally */
-            overflow: hidden;
-            /* Keep text on a single line */
             white-space: nowrap;
-            /* Set initial width to 0 for the animation start */
-            width: 0;
-            /* Blinking cursor style (border) - CHANGED TO SLIM WHITE */
+            /* Initial cursor style before JS runs the typing sequence */
             border-right: 1px solid #fafafa;
-            
-            /* Apply animations. Typing takes 3s. Blink should start after 3s. */
-            animation: typing 3s steps(55, end) forwards,
-                       blink 0.75s step-end infinite 3s;
         }
 
-        /* Typing animation: gradually increase the width of the container */
-        @keyframes typing {
-            from { width: 0 }
-            /* FIX 2: Animate to max-content (intrinsic width of the text) to stop the cursor correctly */
-            to { width: max-content }
-        }
-
-        /* Blinking cursor animation: toggle border visibility - CHANGED TO WHITE */
+        /* Blinking cursor animation: toggle border visibility */
         @keyframes blink {
             from, to { border-color: transparent }
             50% { border-color: #fafafa }
@@ -182,6 +163,67 @@
             speakTime: document.getElementById('metric-speak-time'),
         };
 
+        // --- Typewriter Implementation (JS) ---
+        const TYPE_SPEED = 50;     // ms per character for typing
+        const PAUSE_DURATION = 1500; // ms pause after first phrase
+        const DELETE_SPEED = 25;   // ms per character for deleting
+
+        /**
+         * Utility function to pause execution.
+         * @param {number} ms - Milliseconds to wait.
+         */
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        /**
+         * Types a phrase into the target element.
+         * @param {HTMLElement} element 
+         * @param {string} phrase 
+         */
+        async function typePhrase(element, phrase) {
+            for (let i = 0; i < phrase.length; i++) {
+                element.textContent += phrase.charAt(i);
+                await sleep(TYPE_SPEED);
+            }
+        }
+
+        /**
+         * Deletes the content of the target element character by character.
+         * @param {HTMLElement} element 
+         */
+        async function deletePhrase(element) {
+            while (element.textContent.length > 0) {
+                element.textContent = element.textContent.slice(0, -1);
+                await sleep(DELETE_SPEED);
+            }
+        }
+
+        /**
+         * Runs the full sequence of typing, deleting, and retyping the prompt.
+         */
+        async function runTypewriterSequence() {
+            const element = document.getElementById('typewriter-text');
+            const text1 = "Real-time analysis for your document structure and readability.";
+            const text2 = "Start typing or paste your document here."; // Corrected text
+
+            // Sequence 1: Type Text 1
+            await typePhrase(element, text1);
+            await sleep(PAUSE_DURATION * 1.5);
+
+            // Sequence 2: Delete Text 1
+            await deletePhrase(element);
+            await sleep(PAUSE_DURATION * 0.5);
+
+            // Sequence 3: Type Text 2 (The primary prompt)
+            await typePhrase(element, text2);
+
+            // Sequence 4: Start permanent blinking
+            element.style.animation = 'blink 0.75s step-end infinite';
+        }
+
+        // --- Main Analysis Logic ---
+
         /**
          * Converts total minutes into a formatted H hr M min S sec string,
          * only including units that are non-zero.
@@ -242,7 +284,6 @@
             const charCount = text.length;
 
             // Count sentences: simple heuristic (look for terminal punctuation followed by space or end of string)
-            // Note: This is an approximation and won't handle abbreviations/etc.
             const sentenceMatch = text.match(/[.!?](\s|$)/g);
             const sentenceCount = sentenceMatch ? sentenceMatch.length : 0;
 
@@ -271,23 +312,17 @@
         }
 
         /**
-         * Sets the text for the typewriter effect.
+         * Initialize the typewriter animation on load.
          */
         function initializeTypewriter() {
-            const typewriterTextElement = document.getElementById('typewriter-text');
-            const staticText = "Real-time analysis for your document structure and readability.";
-
-            // Set the full text content. CSS animation handles the gradual display.
-            if (typewriterTextElement) {
-                typewriterTextElement.textContent = staticText;
-            }
+            runTypewriterSequence();
         }
 
 
         // Attach the analysis function to the input event
         textInput.addEventListener('input', analyzeText);
 
-        // Initial analysis and typewriter setup on load
+        // Initial setup on load
         window.addEventListener('load', () => {
             analyzeText();
             initializeTypewriter();
